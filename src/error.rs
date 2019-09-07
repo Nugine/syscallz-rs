@@ -1,5 +1,7 @@
 use std::ffi::CStr;
 use std::fmt::Display;
+use std::io::Error as IOError;
+use std::io::ErrorKind as IOErrorKind;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
@@ -58,6 +60,15 @@ impl std::error::Error for Error {
         match *self {
             Error::Os(_) => "seccomp os error; use Display",
             Error::Msg(ref msg) => msg,
+        }
+    }
+}
+
+impl From<Error> for IOError {
+    fn from(err: Error) -> IOError {
+        match err {
+            Error::Os(errno) => IOError::from_raw_os_error(errno),
+            Error::Msg(msg) => IOError::new(IOErrorKind::Other, msg),
         }
     }
 }
